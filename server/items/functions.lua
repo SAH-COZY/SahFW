@@ -31,3 +31,21 @@ function Item:AddAction(item, cb)
         end
     end
 end
+
+function Item:Label(item)
+    if Item:Exists(item) then
+        return Item.List[item].label
+    end
+end
+
+function Item:Weight(item)
+    if Item:Exists(item) then
+        return Item.List[item].weight
+    end
+end
+
+function Item:Get(item)
+    if Item:Exists(item) then
+        return Item.List[item]
+    end
+end
