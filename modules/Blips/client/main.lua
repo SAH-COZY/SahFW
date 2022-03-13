@@ -1,0 +1,12 @@
+-- TriggerEvent('chat:addSuggestion', '/devtools:createblip', 'Simply create a blip on the map', {
+--     { name="ID", help="Blip ID" },
+--     { name="X", help="X coords" },
+--     { name="Y", help="Y coords" },
+--     { name="Z", help="Z coords" },
+--     { name="Sprite", help="Sprite ID" },
+--     { name="Display", help="Display type"},
+--     { name="Scale", help="Scale multiplier" },
+--     { name="Colour", help="Colour" },
+--     { name="AsShortRange", help="Does blip will be seen only as short range ?" },
+--     { name="Blip Name", help="Blip name on map" },
+-- })
