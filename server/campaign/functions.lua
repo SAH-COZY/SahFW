@@ -4,10 +4,11 @@ setmetatable(Campaign, {})
 
 function Campaign:Register(CampaignOwner_Id)
     local CampaignData = Campaign:DefaultValues()
-    CampaignData.CampaignID, ValidCampaignId = Campaign:GenerateId()
-    repeat 
-        CampaignData.CampaignID, ValidCampaignId = Campaign:GenerateId()
-    until ValidCampaignId == false
+    CampaignData.CampaignID, CampaignExists = Campaign:GenerateId()
+    while CampaignExists do 
+        CampaignData.CampaignID, CampaignExists = Campaign:GenerateId()
+        Wait(1)
+    end
     CampaignData.OwnerIdentifier = Player:Identifier(CampaignOwner_Id)
     exports.mongodb:insertOne({collection = "CampaignsData", document = CampaignData }, function(success, result)
         if not success then
@@ -15,16 +16,21 @@ function Campaign:Register(CampaignOwner_Id)
             DropPlayer(CampaignOwner_Id, "Something wrong append, try to reconnect later")
         end
     end)
-    return CampaignData.Id
+    return CampaignData.CampaignID
+end
+
+function Campaign:AddToList(Data)
+    if not Campaign.List[tostring(Data.CampaignID)] then
+        Campaign.List[tostring(Data.CampaignID)] = InitCampaign(Data)
+    end
 end
 
 function Campaign:Load(Campaign_id)
     exports.mongodb:findOne({ collection = "CampaignsData", query = { CampaignID = Campaign_id } }, function (success, result)
         if success then
-            local Campaign = result[1]
+            local result = result[1]
             Campaign:AddToList(result)
-            local Player = Player:GetFromIdentifier(Campaign:OwnerIdentifier())
-            Bucket:SetPlayerIn()
+            Bucket:Create(Campaign:Bucket(Campaign_id), Campaign:OwnerIdentifier(Campaign_id))
         else
             MongoDB:PrintError(result, debug.getinfo(1, "n").name)
         end
@@ -32,19 +38,22 @@ function Campaign:Load(Campaign_id)
 end
 
 function Campaign:Get(CampaignID)
-    if Campaign:Exists(CampaignID) then return Campaign.List[tostring(CampaignID)] else end
+    if Campaign.List[tostring(CampaignID)] then
+        return Campaign.List[tostring(CampaignID)]
+    end
+end
+
+function Campaign:Bucket(CampaignID)
+    if CampaignID then
+        local Campaign = Campaign:Get(CampaignID)
+        return Campaign:_getBucket()
+    end
 end
 
 function Campaign:OwnerIdentifier(CampaignID)
     if CampaignID then
         local Campaign = Campaign:Get(CampaignID)
         return Campaign:_getOwnerIdentifier()
-    end
-end
-
-function Campaign:AddToList(Data)
-    if not Campaign.List[tostring(Data.CampaignID)] then
-        Campaign.List[tostring(Data.CampaignID)] = InitCampaign(Data)
     end
 end
 
@@ -81,8 +90,6 @@ function Campaign:Exists(Campaign_id)
         return false
     end
 end
-
--- TriggerServerEvent("SahFW:OnAddBaseMoney", self.BaseMoney)
 
 function Campaign:GenerateId()
     local function _gen()

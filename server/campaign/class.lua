@@ -1,6 +1,6 @@
 function InitCampaign(Data)
     self = {}
-    self.CampaignID = Data.Id
+    self.CampaignID = Data.CampaignID
     self.OwnerIdentifier = Data.OwnerIdentifier
     self.BaseMoney = Data.BaseMoney
     self.BaseUpgrades = Data.BaseUpgrades
@@ -9,6 +9,10 @@ function InitCampaign(Data)
 
     self._getOwnerIdentifier = function()
         return self.OwnerIdentifier
+    end
+
+    self._getBucket = function()
+        return self.CampaignID
     end
 
     self._addBaseMoney = function(to_add)
@@ -44,4 +48,6 @@ function InitCampaign(Data)
             table.insert(self.Outposts, outpost_id)
         end
     end
+
+    return self
 end
