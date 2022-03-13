@@ -1,0 +1,7 @@
+RegisterCommand("pg", function()
+    local coords = GetEntityCoords(GetPlayerPed(-1))
+    local _, newZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, 0)
+    -- CreateObject(GetHashKey("WEAPON_G17"), coords.x, coords.y, coords.z, true, false, false)
+    local obj = CreateWeaponObject(GetHashKey("WEAPON_MK18"), 0, coords.x, coords.y, newZ, true, 1.3, 0)
+    SetEntityRotation(obj, 90.0, 0.0, 0.0, 0.0, true)
+end, false)
