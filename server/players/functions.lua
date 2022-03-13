@@ -13,11 +13,3 @@ end
 function Players:GetList()
     return self.List
 end
-
-function Players:GetOne(ID)
-    local ID = tostring(ID)
-    if self.List[ID] then
-        return self.List[ID]
-    end
-    return false
-end
