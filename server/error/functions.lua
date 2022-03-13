@@ -17,7 +17,7 @@ function Errors:PlayerIdNotValid(ID, func_name)
     end
 end
 
-function Errors:PlayerIdNotValid(Identifier, func_name)
+function Errors:PlayerIdentifierNotValid(Identifier, func_name)
     if Identifier and func_name then
         print(string.format("^2[FRAMEWORK] Player with identifier %s doesn't exists | function %s^7", Identifier, func_name))
     end
