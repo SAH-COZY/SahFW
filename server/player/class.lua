@@ -16,6 +16,25 @@ function InitPlayer(Data)
     self.Companions = Data.Companions
     self.UnlockedOutfits = Data.UnlockedOutfits
 
+    self._returnPlayerData = function()
+        local data = {
+            CampaignID = self.CampaignID,
+            Name = self.Name,
+            Level = self.Level,
+            Group = self.Group,
+            Money = self.Money,
+            Skin = self.Skin,
+            Inventory = self.Inventory,
+            Loadout = self.Loadout,
+            Loadout = self.Position,
+            OwnedVehicles = self.OwnedVehicles,
+            Weight = self.Weight,
+            Companions = self.Companions,
+            UnlockedOutfits = self.UnlockedOutfits,
+        }
+        return data
+    end
+
     self._changeName = function(new_name)
         if new_name then
             self.Name = new_name
@@ -43,7 +62,7 @@ function InitPlayer(Data)
     self._addMoney = function(to_add)
         if to_add then
             self.Money = self.Money+to_add
-        end        
+        end
     end
 
     self._removeMoney = function(to_remove)
@@ -60,6 +79,75 @@ function InitPlayer(Data)
 
     self._getInventory = function()
         return self.Inventory
+    end
+
+    self._getLoadout = function()
+        return self.Loadout
+    end
+
+    self._initLoadout = function()
+        for k,v in pairs(self.Loadout) do
+            GiveWeaponToPed(GetPlayerPed(self.Id), v.hash, v.ammo, false, (k == "Primary"))
+            if SharedFunc:GetTableSize(v.components) > 0 then
+                for k2,v2 in pairs(v.components) do
+                    GiveWeaponComponentToPed(GetPlayerPed(self.Id), v.hash, v2.value)
+                end
+            end
+        end
+        TriggerClientEvent("SahFW:UpdatePlayerLoadout", self.Id, self.Loadout)
+    end
+
+    self._addWeapon = function(weapon, ammo, equipnow)
+        if weapon and WeaponShared:Valid(weapon) and ammo and equipnow then
+            if not self.Loadout[WeaponShared:GetPlacement(weapon)] then
+                self.Loadout[WeaponShared:GetPlacement(weapon)] = {hash = WeaponShared:Hash(weapon), label = WeaponShared:Label(weapon), name = WeaponShared:Name(weapon), ammo = ammo, components = {}}
+            else
+                RemoveAllPedWeapons(GetPlayerPed(self.Id))
+                Weapon:CreatePickup(self.Id, GetEntityCoords(GetPlayerPed(self.Id)), self.Loadout[WeaponShared:GetPlacement(weapon)])
+                self.Loadout[WeaponShared:GetPlacement(weapon)] = {hash = WeaponShared:Hash(weapon), label = WeaponShared:Label(weapon), name = WeaponShared:Name(weapon), ammo = ammo, components = {}}
+            end
+            for k,v in pairs(self.Loadout) do
+                local equip = false
+                if v.name == weapon then equip = true end
+                GiveWeaponToPed(GetPlayerPed(self.Id), v.name, v.ammo, false, equip)
+                for k2,v2 in pairs(v.components) do
+                    GiveWeaponComponentToPed(GetPlayerPed(self.Id), v.hash, v2.hash)
+                end
+            end
+            TriggerClientEvent("SahFW:UpdatePlayerLoadout", self.Id, self.Loadout)
+        end
+    end
+
+    self._removeWeapon = function(weapon, drop)
+        local cache = {}
+        if weapon and WeaponShared:Valid(weapon) then
+            if self.Loadout[WeaponShared:GetPlacement(weapon)][weapon] then
+                cache.weaponData = self.Loadout[WeaponShared:GetPlacement(weapon)][weapon]
+                self.Loadout[WeaponShared:GetPlacement(weapon)] = nil
+                if drop then
+                    WeaponShared:DropWeapon(GetEntityCoords(GetPlayerPed(self.Id)), cache.weaponData)
+                end
+            end
+            TriggerClientEvent("SahFW:UpdatePlayerLoadout", self.Id, self.Loadout)
+        end
+    end
+
+    self._addWeaponComponent = function(weapon, component)
+        if weapon and WeaponShared:Valid(weapon) and component then
+            local ValidComponent, ComponentData = WeaponShared:GetComponent(weapon, component)
+            if ValidComponent then
+                if not self.Loadout[WeaponShared:GetPlacement(weapon)].components[ComponentData.category] then
+                    print('there is no component on this part')
+                    self.Loadout[WeaponShared:GetPlacement(weapon)].components[ComponentData.category] = ComponentData
+                else
+                    print('there is a component on this part')
+                    -- Weapon:DropComponent(GetEntityCoords(GetPlayerPed(self.Id)), self.Loadout[Weapon:GetPlacement(weapon)].components[ComponentData.category])
+                    self.Loadout[WeaponShared:GetPlacement(weapon)].components[ComponentData.category] = ComponentData
+                end
+                GiveWeaponComponentToPed(GetPlayerPed(self.Id), WeaponShared:Hash(weapon), ComponentData.hash)
+            end
+            TriggerClientEvent("SahFW:UpdatePlayerLoadout", self.Id, self.Loadout)
+        end
     end
 
     self._addInventoryItem = function(item, count)
@@ -123,6 +211,13 @@ function InitPlayer(Data)
     self._triggerEvent = function(eventname, ...)
         if eventname then
             TriggerClientEvent(eventname, self.Id, ...)
+        end
+    end
+
+    self._setModel = function(model)
+        if model then
+            model = GetHashKey(model)
+            SetPlayerModel(GetPlayerFromServerId(self.Id), model)
         end
     end
 
